@@ -92,15 +92,47 @@ class SwerveModule:
         self.canCoder.configurator.apply(canCoderConfigs) # sending the settings to the CANcoder
         
 
-
 #  _______          _     
 # |__   __|        | |    
 #    | | ___   ___ | |___ 
 #    | |/ _ \ / _ \| / __|
 #    | | (_) | (_) | \__ \
 #    |_|\___/ \___/|_|___/
-                         
-                         
+                        
+    
+    
+    def getTurnWheelState(self)-> geometry.Rotation2d:
+        """Returns the current position of the turn motor in radians"""
+        #what is the angle of the wheel?
+        return geometry.Rotation2d(self.turnMotor.get_position().value * (math.tau))
+    
+    
+    
+    
+    
+    
+    def setState(self, optimizedDesiredState: kinematics.SwerveModuleState)-> None:
+        #getting the wheel to where we want it to be
+        optimizedDesiredState.optimize(geometry.Rotation2d(self.turnMotor.get_position().value)) #This fuction, along with the continuous wrap being set to true in the config for the turn motor ensures that the wheel never turns more than 90 degrees relative to the robot chassis. This line in particular lets us invert the direction of the drive motor to make it seem like it had turned an additional 90 degrees
+        
+        driveMotorVelocity = optimizedDesiredState.speed # getting the speed we should set the motor to from the optimized desired state object and saving it to its own variable
+        
+        turnMotorPosition = optimizedDesiredState.angle.radians() / math.tau # getting the desired angle from the optimized desired state and saving it as its own variable
+        
+        self.driveMotor.set_control(self.velocity.with_velocity(driveMotorVelocity)) #setting the drive motor to go to the desired velocity
+        
+        self.turnMotor.set_control(self.position.with_position(turnMotorPosition)) #setting the turn motor to the desired position
+    
+    
+    
+    
+    
+    
+    
+
+    def brake(self):
+        self.driveMotor.set_control(self.brake)
+        self.turnmotor.set_control(self.brake)
         
     
         
