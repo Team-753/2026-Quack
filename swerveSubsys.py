@@ -3,6 +3,7 @@ from math import pi
 import wpimath.geometry
 import wpimath.kinematics
 from wpilib import AnalogEncoder
+from robotConfig import swerveStuff
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
         super().__init__()
@@ -38,9 +39,8 @@ class swerveSubsys():
         self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed*8.14))
     def getRot(self):
         return self.turnMotor.get_position().value
-    def reZero(self):
-        #self.turnMotor.set_position()
-        print(self.turnMotor.get_position(),self.turnSensor.get())
+    def reZero(self,id):
+        self.turnMotor.set_position(self.turnSensor.get()-swerveStuff.offsetList[id])
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
@@ -53,8 +53,8 @@ class driveTrainSubsys(commands2.Subsystem):
         self.swerveKinematics=wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(0.26,0.32),wpimath.geometry.Translation2d(0.26,-0.32),wpimath.geometry.Translation2d(-0.26,-0.32),wpimath.geometry.Translation2d(-0.26,0.32))
     def setState(self,fb,lr,rot):
         swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds(fb,lr,rot))
+        swerveStuff.offsetList
         #swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,self.navX.getRotation2d()))
-        self.swerve0.reZero()
         for i in range(4):
             exec(str("swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d(self.swerve"+str(i)+".getRot()*2*pi))"))
             exec(str("self.swerve"+str(i)+".setState(swerveNumbers["+str(i)+"].angle.degrees()/360,swerveNumbers["+str(i)+"].speed_fps/3.18)"))
