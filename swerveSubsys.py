@@ -43,7 +43,7 @@ class swerveSubsys():
     def getRot(self):
         return self.turnMotor.get_position().value
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d(self.turnSensor.get()))
+        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d(self.turnMotor.get_position().value*pi*4))
     def reZero(self,id):
         self.turnMotor.set_position(self.turnSensor.get()-swerveStuff.offsetList[id])
 class driveTrainSubsys(commands2.Subsystem):
