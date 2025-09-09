@@ -1,11 +1,12 @@
 import commands2,phoenix6,wpimath,navx
 from math import pi
+import math
 import wpimath.controller
 import wpimath.geometry
 import wpimath.kinematics
 from wpilib import AnalogEncoder
 import wpimath.trajectory
-from robotConfig import swerveStuff
+import swerveConfig
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
         super().__init__()
@@ -36,23 +37,22 @@ class swerveSubsys():
             self.hasSensor=True
             self.turnSensor=AnalogEncoder(turnSensorID)
             self.turnVariable=self.turnSensor.get()
-        self.turnMotor.set_position(self.turnSensor.get()-swerveStuff.offsetList[turnSensorID])
+        self.turnMotor.set_position(self.turnSensor.get()-swerveConfig.offsetList[turnSensorID])
     def setState(self,desRot,desSpeed):
         self.turnMotor.set_control(self.postion.with_position(desRot))
         self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed*8.14))
     def getRot(self):
         return self.turnMotor.get_position().value
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d(self.turnSensor.get()))
+        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d(self.turnMotor.get_position().value_as_double*pi*2))
     def reZero(self,id):
-        self.turnMotor.set_position(self.turnSensor.get()-swerveStuff.offsetList[id])
+        self.turnMotor.set_position(self.turnSensor.get()-swerveConfig.offsetList[id])
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
         for i in range(4):
             num=(i+1)*2
             string=str("self.swerve"+str(i)+"=swerveSubsys("+str(num-1)+","+str(num)+","+str(i)+")")
-            print(string)
             exec(string)
         self.navX=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
         self.swerveKinematics=wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(0.26,0.32),wpimath.geometry.Translation2d(0.26,-0.32),wpimath.geometry.Translation2d(-0.26,-0.32),wpimath.geometry.Translation2d(-0.26,0.32))
@@ -103,7 +103,7 @@ class driveTrainCommand(commands2.Command):
         self.driveTrain,self.joystick=driveSubsys,joySubsys
     def execute(self):
         #print(self.joystick.getX(),self.joystick.getY(),self.joystick.getZ())
-        print(self.driveTrain.getPoseState())
+              #,self.driveTrain.getSwerveState())
         self.driveTrain.setState(self.joystick.getY(),self.joystick.getX(),self.joystick.getZ())#self.joystick.getZ()*2)
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys):
@@ -117,7 +117,9 @@ class autoDriveTrainCommand(commands2.Command):
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
         endPos=wpigeo.Pose2d.fromFeet(0,5,wpigeo.Rotation2d.fromDegrees(0))
-        self.holoCont=cont.HolonomicDriveController(cont.PIDController(0.1,0,0),cont.PIDController(0.1,0,0),cont.ProfiledPIDControllerRadians(0.1,0,0))
-        self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory(startPos,end=endPos,config=config)
-    def execute(self,desCoord):
-        return self.holoCont.calculate(self.driveSubsys.getPoseState(),self.trajectory,)
+        self.holoCont=cont.HolonomicDriveController(cont.PIDController(0.1,0,0),cont.PIDController(0.1,0,0),cont.ProfiledPIDControllerRadians(0,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
+        self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
+        self.goal=self.trajectory.sample(5)
+    def execute(self):
+        speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal,wpimath.geometry.Rotation2d(0))
+        self.driveSubsys.setState(speeds.vy,speeds.vx,speeds.omega)
