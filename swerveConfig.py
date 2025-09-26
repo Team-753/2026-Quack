@@ -3,12 +3,18 @@
 #| |_) | /  \  | (___   | || |      | |   | |  | |  \| | |__    | || |  __ 
 #|  _ < / /\ \  \___ \  | || |      | |   | |  | | . ` |  __|   | || | |_ |
 #| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
-#|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|\
+#|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
 swerveSpeed=4
 swerveTurnSpeed=2
-                                                                           
-                                                                           
+
+swerveController="XboxController" #Options:XboxController,Joystick
+swerveControllerSlot=0
+
+
+
+
+
 #ROTATION OFFSETS FOR SWERVE ROTATION SENSORS 
     #HOW DO I GET THESE NUMBERS?
     #I MANUALLY SET THE SWERVES TO THE FORWARD POSITION AND THEN PRINTED OUT THE OFFSETS OF EACH ENCODER AND RECORDED THEM

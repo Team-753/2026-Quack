@@ -107,7 +107,7 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(4):
             exec("string.append(self.swerve"+str(i)+".getState())")
         return string
-class joystickSubsys(commands2.Subsystem):
+class XboxControllerSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandXboxController):
         self.myJoy=joystick
         super().__init__()
@@ -117,7 +117,7 @@ class joystickSubsys(commands2.Subsystem):
         return self.myJoy.getLeftX()
     def getZ(self):
         return self.myJoy.getRightX()
-class hotasSubsys(commands2.Subsystem):
+class JoystickSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandJoystick):
         self.myJoy=joystick
         super().__init__()
@@ -128,14 +128,13 @@ class hotasSubsys(commands2.Subsystem):
     def getY(self):
         return self.myJoy.getRawAxis(axis=1)
 class driveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:joystickSubsys):
-        super().__init__()
-        self.addRequirements(driveSubsys,joySubsys)
-        self.driveTrain,self.joystick=driveSubsys,joySubsys
+    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys):
+       super().__init__()
+       self.addRequirements(driveSubsys,joySubsys)
+       self.driveTrain,self.joystick=driveSubsys,joySubsys
     def execute(self):
         #print(self.joystick.getX(),self.joystick.getY(),self.joystick.getZ())
               #,self.driveTrain.getSwerveState())
-        print(self.driveTrain.getPoseState())
         self.driveTrain.setState(-self.joystick.getY()*swerveConfig.swerveSpeed,self.joystick.getX()*swerveConfig.swerveSpeed,-self.joystick.getZ()*swerveConfig.swerveTurnSpeed)#self.joystick.getZ()*2)
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys):

@@ -1,13 +1,13 @@
-from swerveSubsys import driveTrainCommand,joystickSubsys,driveTrainSubsys,hotasSubsys,autoDriveTrainCommand
-import wpilib,commands2
+from swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,autoDriveTrainCommand
+import wpilib,commands2,swerveConfig
 class robotContainer():
     def __init__(self):
-        self.controller=commands2.button.CommandJoystick(0)
+        exec("self.controller=commands2.button.Command"+str(swerveConfig.swerveController)+"("+str(swerveConfig.swerveControllerSlot)+")")
         #Declare Subystems
         self.driveSubsystem=driveTrainSubsys()
-        self.joystick=hotasSubsys(self.controller)
+        exec("self.joystick="+str(swerveConfig.swerveController)+"Subsys(self.controller)")
         #self.joystick.setDefaultCommand(testDefCommand(self.joystick))
-        self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
+        exec("self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,joySubsys="+str(swerveConfig.swerveController)+"Subsys))")
         print("containerInited")
         self.buttonBindings()
     def teleopInit(self):
