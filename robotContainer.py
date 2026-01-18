@@ -1,8 +1,12 @@
-from swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,autoDriveTrainCommand
+from swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,autoDriveTrainCommand,VKBJoystickSubsys
 import wpilib,commands2,swerveConfig
 class robotContainer():
     def __init__(self):
-        exec("self.controller=commands2.button.Command"+str(swerveConfig.driveController)+"("+str(swerveConfig.driveControllerSlot)+")")
+        if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
+            self.controllerType="Joystick"
+        elif swerveConfig.driveController=="XboxController":
+            self.controllerType="XboxController"
+        exec("self.controller=commands2.button.Command"+str(self.controllerType)+"("+str(swerveConfig.driveControllerSlot)+")")
         #Declare Subystems
         self.driveSubsystem=driveTrainSubsys()
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
