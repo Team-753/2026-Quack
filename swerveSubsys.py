@@ -5,7 +5,7 @@ import wpimath.controller
 import wpimath.geometry
 import wpimath.kinematics
 import wpimath.estimator
-from wpilib import AnalogEncoder
+from wpilib import AnalogEncoder,Timer
 import wpimath.trajectory
 import swerveConfig
 from customFunctions import curveControl
@@ -82,7 +82,9 @@ class swerveSubsys():
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
+        #self.swerveSubsystems = []
         for i in range(4):
+            #self.swerveSubsystems.append(swerveSubsys())
             string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
             exec(string)
         if swerveConfig.robotCompassType=="pidgeon":
@@ -95,7 +97,7 @@ class driveTrainSubsys(commands2.Subsystem):
         widthN=swerveConfig.swerveBaseWidth/2
         lengthN=swerveConfig.swerveBaseLength/2
         self.swerveKinematics=wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2))
-
+        #self.a=wpimath.estimator.SwerveDrive4PoseEstimator(self.swerveKinematics,self.compass.getRotation2d(),(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2)))
         #DOES NOT USE GYRO DATA, REPLACE WITH ESTIMATOR
         self.odometry=wpimath.kinematics.SwerveDrive4Odometry(self.swerveKinematics,self.robotRotation,self.getSwerveState(),wpimath.geometry.Pose2d(wpimath.geometry.Translation2d(0,0),wpimath.geometry.Rotation2d(0)))
     def setState(self,fb,lr,rot):       
@@ -108,7 +110,6 @@ class driveTrainSubsys(commands2.Subsystem):
             exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
         odo=self.odometry.getPose()
-        print(odo,self.compass.getRotation2d())
         return odo
     def periodic(self):
         self.odometry.update(self.compass.getRotation2d(),self.getSwerveState())
@@ -171,15 +172,19 @@ class autoDriveTrainCommand(commands2.Command):
         cont=wpimath.controller
         wpigeo=wpimath.geometry
         super().__init__()
-        config = wpimath.trajectory.TrajectoryConfig.fromFps(12, 12)
+        aconfig = wpimath.trajectory.TrajectoryConfig(1,1)
+
         #config.setReversed(True)
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
-        endPos=wpigeo.Pose2d.fromFeet(-3,0,wpigeo.Rotation2d.fromDegrees(0))
-        self.holoCont=cont.HolonomicDriveController(cont.PIDController(1,0,0),cont.PIDController(1,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
-        self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
+        endPos=wpigeo.Pose2d.fromFeet(-10,0,wpigeo.Rotation2d.fromDegrees(0))
+        self.holoCont=cont.HolonomicDriveController(cont.PIDController(2,0,0),cont.PIDController(2,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
+        self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=aconfig)
+        self.clock=Timer()
+        self.clock.start()
     def execute(self):
-        self.goal=self.trajectory.sample(1.49)
+        self.goal=self.trajectory.sample(self.clock.get())
         speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal,wpimath.geometry.Rotation2d(0))
-        print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
+        #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
+        print(speeds.vx,speeds.vy,speeds.omega,self.clock.get())
         self.driveSubsys.setState(speeds.vx,speeds.vy,speeds.omega)
