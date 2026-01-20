@@ -75,7 +75,7 @@ class swerveSubsys():
         else:
             return self.turnSensor.get_absolute_position().value
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d(self.turnMotor.get_position().value_as_double*pi*2))
+        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
     def debug(self):
         return self.turnSensor.get_position().value
 
@@ -108,7 +108,7 @@ class driveTrainSubsys(commands2.Subsystem):
             exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
         odo=self.odometry.getPose()
-        #print(odo,self.compass.getRotation2d())
+        print(odo,self.compass.getRotation2d())
         return odo
     def periodic(self):
         self.odometry.update(self.compass.getRotation2d(),self.getSwerveState())
@@ -160,7 +160,7 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
     def execute(self):
         self.driveTrain.setState(curveControl(self.joystick.getY(),2.5)*swerveConfig.driveSpeed,-curveControl(self.joystick.getX(),2.5)*swerveConfig.driveSpeed,curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
-        #print(self.driveTrain.odometry.getPose())
+        print(self.driveTrain.odometry.getPose(),self.driveTrain.compass.getRotation2d())
 class fieldOrientReorient(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.addRequirements(driveSubsys,joySubsys)
@@ -174,9 +174,9 @@ class autoDriveTrainCommand(commands2.Command):
         config = wpimath.trajectory.TrajectoryConfig.fromFps(12, 12)
         #config.setReversed(True)
         #IMPORTANT STUFF
-        startPos=wpigeo.Pose2d.fromFeet(0,1,wpigeo.Rotation2d.fromDegrees(180))
-        endPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(180))
-        self.holoCont=cont.HolonomicDriveController(cont.PIDController(0.3,0,0),cont.PIDController(0.3,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
+        startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
+        endPos=wpigeo.Pose2d.fromFeet(-3,0,wpigeo.Rotation2d.fromDegrees(0))
+        self.holoCont=cont.HolonomicDriveController(cont.PIDController(1,0,0),cont.PIDController(1,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
     def execute(self):
         self.goal=self.trajectory.sample(1.49)
