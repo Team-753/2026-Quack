@@ -6,13 +6,13 @@ import wpimath.geometry
 import wpimath.kinematics
 from wpimath.estimator import SwerveDrive4PoseEstimator
 
-from limelight import LimelightCamera
+from Drivetrain.limelight import LimelightCamera
 
 from wpimath import estimator
 
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
-import swerveConfig
+import Drivetrain.swerveConfig as swerveConfig
 from customFunctions import curveControl,vectorCurve
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
@@ -232,7 +232,7 @@ class autoDriveTrainCommand(commands2.Command):
         #config.setReversed(True)
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
-        endPos=wpigeo.Pose2d.fromFeet(1,0,wpigeo.Rotation2d.fromDegrees(0))
+        endPos=wpigeo.Pose2d.fromFeet(20,0,wpigeo.Rotation2d.fromDegrees(0))
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
         self.clock=wpilib.Timer()
