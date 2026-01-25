@@ -87,7 +87,7 @@ class swerveSubsys():
             return self.turnSensor.get_absolute_position().value
 
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(-self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
+        return wpimath.kinematics.SwerveModulePosition(-self.driveMotor.get_position().value*swerveConfig.swerveWheelDiameter*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
 
     def debug(self):
         return self.turnSensor.get_position().value
@@ -137,7 +137,7 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
-            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed_fps)
+            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
             #exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
             #exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
