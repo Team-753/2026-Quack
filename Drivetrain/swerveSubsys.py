@@ -12,6 +12,7 @@ from wpimath import estimator
 
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
+import navx
 import Drivetrain.swerveConfig as swerveConfig
 from customFunctions import curveControl,vectorCurve
 class swerveSubsys():
@@ -79,7 +80,6 @@ class swerveSubsys():
     def setState(self,desRot,desSpeed):
         self.turnMotor.set_control(self.postion.with_position(desRot))
         self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
-
     def getRot(self):
         if self.hasWpiEnc:
             return self.turnMotor.get_position().value
@@ -102,6 +102,10 @@ class driveTrainSubsys(commands2.Subsystem):
             #exec(string)
         if swerveConfig.robotCompassType=="pidgeon":
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
+            self.compass.reset()
+            self.robotRotation=self.compass.getRotation2d()
+        elif swerveConfig.robotCompassType=="navx":
+            self.compass=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
     
