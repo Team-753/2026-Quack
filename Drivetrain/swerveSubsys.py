@@ -221,8 +221,8 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
 
     def execute(self):
-        curvedDriveValues=vectorCurve(-self.joystick.getX(),-self.joystick.getY(),2.5,swerveConfig.driveSpeed)
-        self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
+        curvedDriveValues=vectorCurve(self.joystick.getX(),self.joystick.getY(),2.5,swerveConfig.driveSpeed)
+        self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
         pass
 
 class fieldOrientReorient(commands2.Command):
